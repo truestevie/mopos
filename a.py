@@ -23,7 +23,7 @@ class ShoppingBasket():
     def __init__(self, currencyCode="EUR"):
         self.itemQuantities = {}    # Dictionary of product objects and itemQuantities in the shopping cart
         self.numberOfItems = 0      # Number of items in the shopping cart
-        self.total = 0.00           # Total amount (Euro's, ...) of the shopping cart
+        self.cashTotal = 0.00           # Total amount (Euro's, ...) of the shopping cart
         self.cashReceived = 0.00    # Amount (Euro's, ...) received from customer
         self.currencyCode = currencyCode
 
@@ -38,13 +38,13 @@ class ShoppingBasket():
                         unitPrice=item.unitPrice,
                         totalItemPrice=quantity * item.unitPrice,
                         currencyCode=self.currencyCode))
-        if self.total != 0:
+        if self.cashTotal != 0:
             print()
             print("Totaal {numberOfItems:>28} item(s)      {currencyCode} {amount:6.2f}".format(numberOfItems=self.numberOfItems,
-                                                                                                amount=self.total,
+                                                                                                amount=self.cashTotal,
                                                                                                 currencyCode=self.currencyCode))
         if self.cashReceived != 0:
-            if self.cashReceived >= self.total:
+            if self.cashReceived >= self.cashTotal:
                 cashStringWithCheck = "Ontvangen"
             else:
                 cashStringWithCheck = "Ontvangen (ONTOEREIKEND)"
@@ -55,13 +55,13 @@ class ShoppingBasket():
                                                                          currencyCode=self.currencyCode))
             print()
             print("{changeString:>46}   {currencyCode} {change:6.2f}".format(changeString="Terug",
-                                                                             change=self.cashReceived - self.total,
+                                                                             change=self.cashReceived - self.cashTotal,
                                                                              currencyCode=self.currencyCode))
 
     def addItem(self, itemObject, quantity=1):
         if quantity > 0:
             self.numberOfItems += quantity
-            self.total += quantity * itemObject.unitPrice
+            self.cashTotal += quantity * itemObject.unitPrice
             if itemObject in self.itemQuantities:
                 self.itemQuantities[itemObject] += quantity
             else:
@@ -103,12 +103,12 @@ class ShoppingBasket():
                     print("Removing less than total.")
                     self.itemQuantities[itemObject] -= quantity
                     self.numberOfItems -= quantity
-                    self.total -= quantity * itemObject.unitPrice
+                    self.cashTotal -= quantity * itemObject.unitPrice
                 elif self.itemQuantities[itemObject] == quantity:
                     print("Removing total.")
                     del self.itemQuantities[itemObject]
                     self.numberOfItems -= quantity
-                    self.total -= quantity * itemObject.unitPrice
+                    self.cashTotal -= quantity * itemObject.unitPrice
                 elif self.itemQuantities[itemObject] < quantity:
                     # Not possible with quantity > 0 check.
                     # Should we allow to receive return goods?
@@ -116,12 +116,12 @@ class ShoppingBasket():
                     print("Receiving returned goods.")
                     self.itemQuantities[itemObject] -= quantity
                     self.numberOfItems -= quantity
-                    self.total -= quantity * itemObject.unitPrice
+                    self.cashTotal -= quantity * itemObject.unitPrice
             else:
                 print("Receiving returned goods (item is not present in current shopping cart).")
                 self.itemQuantities[itemObject] = -quantity
                 self.numberOfItems -= quantity
-                self.total -= quantity * itemObject.unitPrice
+                self.cashTotal -= quantity * itemObject.unitPrice
         else:
             print("Number of items to be removed should be larger than 0!")
 
@@ -135,9 +135,9 @@ class ShoppingBasket():
 
     def closeTransaction(self, cashRegister, stockRegister, currencyCode):
         # stockRegister.update(self)
-        if self.total != 0:
+        if self.cashTotal != 0:
             cashRegister.addTransaction(1)
-            cashRegister.addCashAndRevenue(self.cashReceived)
+            cashRegister.addCashAndRevenue(self.cashTotal)
         for item, quantity in self.itemQuantities.items():
             stockRegister.registerSoldItem(itemCode=item.code, itemUnitPrice=item.unitPrice, itemQuantity=quantity)
         pickle.dump(cashRegister, open("cashRegister.p", "wb"), protocol=2)
@@ -255,17 +255,16 @@ def main(configFile, args):
     except IOError as e:
         print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
-    print("Aha!!!???")
     cashRegister.show()
 
     # print(itemDescriptions['iv'])
     shoppingBasket = ShoppingBasket(currencyCode)
-    shoppingBasket.addItem(itemDescriptions['ik'], 1)
-    shoppingBasket.addItem(itemDescriptions['iv'], 2)
-    shoppingBasket.addItem(itemDescriptions['dk'], 3)
-    shoppingBasket.addItem(itemDescriptions['db'], 4)
-    shoppingBasket.addCash(20)
-    shoppingBasket.addCash(20)
+    shoppingBasket.addItem(itemDescriptions['ik'], 10)
+    shoppingBasket.addItem(itemDescriptions['iv'], 20)
+    shoppingBasket.addItem(itemDescriptions['dk'], 30)
+    shoppingBasket.addItem(itemDescriptions['db'], 40)
+    shoppingBasket.addCash(200)
+    shoppingBasket.addCash(200)
     # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
     shoppingBasket.show()
     cashRegister, stockRegister = shoppingBasket.closeTransaction(
