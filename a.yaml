@@ -1,0 +1,26 @@
+initial:
+    cash: 1000
+
+currencyCode: EUR
+
+products:
+    - code: iv
+      name: Inkom volwassene
+      price: 2
+      printOrder: 1
+    - code: ik
+      name: Inkom kind
+      price: 1
+      printOrder: 2
+    - code: dk
+      name: Drankkaart
+      price: 8
+      printOrder: 3
+    - code: db
+      name: Drankbon
+      price: 0.8
+      printOrder: 4
+    - code: sk
+      name: Steunkaart
+      price: 1
+      printOrder: 5
