@@ -7,50 +7,50 @@ from pprint import pprint
 
 config_file = "a.yaml"
 
-class ItemDescription():
-    def __init__(self, code, name, unitPrice, printOrder):
-        self.code= code
+
+class ItemDescription:
+    def __init__(self, code, name, unit_price, print_order):
+        self.code = code
         self.name = name
-        self.unitPrice = unitPrice
-        self.printOrder = printOrder  # Future use: print sorted list
+        self.unitPrice = unit_price
+        self.printOrder = print_order  # Future use: print sorted list
 
     def __str__(self):
         return 'Code: {} - Name: {} - Unit price: {} - Order: {}'\
             .format(self.code, self.name, self.unitPrice, self.printOrder)
 
 
-class ShoppingBasket():
-    def __init__(self, currencyCode="EUR"):
+class ShoppingBasket:
+    def __init__(self, currency_code="EUR"):
         self.itemQuantities = {}    # Dictionary of product objects and itemQuantities in the shopping cart
         self.numberOfItems = 0      # Number of items in the shopping cart
         self.cashTotal = 0.00           # Total amount (Euro's, ...) of the shopping cart
         self.cashReceived = 0.00    # Amount (Euro's, ...) received from customer
-        self.currencyCode = currencyCode
+        self.currencyCode = currency_code
 
     def show(self):
         print()
         print()
         for item, quantity in self.itemQuantities.items():
             if quantity != 0:
-                print("{itemName:<30} {itemQuantity:4} x {currencyCode} {unitPrice:3.2f} = {currencyCode} {totalItemPrice:>6.2f}"\
-                .format(itemName=item.name,
-                        itemQuantity=quantity,
-                        unitPrice=item.unitPrice,
-                        totalItemPrice=quantity * item.unitPrice,
-                        currencyCode=self.currencyCode))
+                print("{itemName:<30} {itemQuantity:4} x {currencyCode} {unitPrice:3.2f} = "
+                      "{currencyCode} {totalItemPrice:>6.2f}".format(itemName=item.name,
+                                                                     itemQuantity=quantity,
+                                                                     unitPrice=item.unitPrice,
+                                                                     totalItemPrice=quantity * item.unitPrice,
+                                                                     currencyCode=self.currencyCode))
         if self.cashTotal != 0:
             print()
-            print("Totaal {numberOfItems:>28} item(s)      {currencyCode} {amount:6.2f}".format(numberOfItems=self.numberOfItems,
-                                                                                                amount=self.cashTotal,
-                                                                                                currencyCode=self.currencyCode))
+            print("Totaal {numberOfItems:>28} item(s)      {currencyCode} {amount:6.2f}"
+                  .format(numberOfItems=self.numberOfItems, amount=self.cashTotal, currencyCode=self.currencyCode))
         if self.cashReceived != 0:
             if self.cashReceived >= self.cashTotal:
-                cashStringWithCheck = "Ontvangen"
+                cash_string_with_check = "Ontvangen"
             else:
-                cashStringWithCheck = "Ontvangen (ONTOEREIKEND)"
+                cash_string_with_check = "Ontvangen (ONTOEREIKEND)"
             print()
             print()
-            print("{cashString:>46}   {currencyCode} {cash:6.2f}".format(cashString=cashStringWithCheck,
+            print("{cashString:>46}   {currencyCode} {cash:6.2f}".format(cashString=cash_string_with_check,
                                                                          cash=self.cashReceived,
                                                                          currencyCode=self.currencyCode))
             print()
@@ -58,99 +58,99 @@ class ShoppingBasket():
                                                                              change=self.cashReceived - self.cashTotal,
                                                                              currencyCode=self.currencyCode))
 
-    def addItem(self, itemObject, quantity=1):
+    def add_item(self, item_object, quantity=1):
         if quantity > 0:
             self.numberOfItems += quantity
-            self.cashTotal += quantity * itemObject.unitPrice
-            if itemObject in self.itemQuantities:
-                self.itemQuantities[itemObject] += quantity
+            self.cashTotal += quantity * item_object.unitPrice
+            if item_object in self.itemQuantities:
+                self.itemQuantities[item_object] += quantity
             else:
-                self.itemQuantities[itemObject] = quantity
-            print("Item '{}' added to shopping cart. New quantity = {}.".format(itemObject.name, self.itemQuantities[itemObject]))
+                self.itemQuantities[item_object] = quantity
+            print("Item '{}' added to shopping cart. New quantity = {}."
+                  .format(item_object.name, self.itemQuantities[item_object]))
         else:
             print("Number of items to be added should be larger than 0!")
 
-    def addCash(self, amount):
+    def add_cash(self, amount):
         if amount > 0:
             self.cashReceived += amount
         else:
             print("Amount should be larger than 0!")
 
-    def removeCash(self, amount):
+    def remove_cash(self, amount):
         if amount > 0:
             if amount < self.cashReceived:
                 self.cashReceived -= amount
             else:
-                print("Unable to remove {currencyCode} {amount:.2f} from basket, "
-                "it has only {currencyCode} {cashReceived:.2f} available.".format(
-                    currencyCode=self.currencyCode,
-                    amount=amount,
-                    cashReceived=self.cashReceived))
+                print("Unable to remove {currencyCode} {amount:.2f} from basket, it has only {currencyCode}"
+                      " {cashReceived:.2f} available.".format(currencyCode=self.currencyCode,
+                                                              amount=amount,
+                                                              cashReceived=self.cashReceived))
         else:
             print("Amount should be larger than 0!")
 
-    def setCash(self, amount):
+    def set_cash(self, amount):
         if amount > 0:
             self.cashReceived = amount
         else:
             print("Amount should be larger than 0!")
 
-
-    def removeItem(self, itemObject, quantity=1):
+    def remove_item(self, item_object, quantity=1):
         if quantity > 0:
-            if itemObject in self.itemQuantities:
-                if self.itemQuantities[itemObject] > quantity:
+            if item_object in self.itemQuantities:
+                if self.itemQuantities[item_object] > quantity:
                     print("Removing less than total.")
-                    self.itemQuantities[itemObject] -= quantity
+                    self.itemQuantities[item_object] -= quantity
                     self.numberOfItems -= quantity
-                    self.cashTotal -= quantity * itemObject.unitPrice
-                elif self.itemQuantities[itemObject] == quantity:
+                    self.cashTotal -= quantity * item_object.unitPrice
+                elif self.itemQuantities[item_object] == quantity:
                     print("Removing total.")
-                    del self.itemQuantities[itemObject]
+                    del self.itemQuantities[item_object]
                     self.numberOfItems -= quantity
-                    self.cashTotal -= quantity * itemObject.unitPrice
-                elif self.itemQuantities[itemObject] < quantity:
+                    self.cashTotal -= quantity * item_object.unitPrice
+                elif self.itemQuantities[item_object] < quantity:
                     # Not possible with quantity > 0 check.
                     # Should we allow to receive return goods?
                     # To be included in other call...?
                     print("Receiving returned goods.")
-                    self.itemQuantities[itemObject] -= quantity
+                    self.itemQuantities[item_object] -= quantity
                     self.numberOfItems -= quantity
-                    self.cashTotal -= quantity * itemObject.unitPrice
+                    self.cashTotal -= quantity * item_object.unitPrice
             else:
                 print("Receiving returned goods (item is not present in current shopping cart).")
-                self.itemQuantities[itemObject] = -quantity
+                self.itemQuantities[item_object] = -quantity
                 self.numberOfItems -= quantity
-                self.cashTotal -= quantity * itemObject.unitPrice
+                self.cashTotal -= quantity * item_object.unitPrice
         else:
             print("Number of items to be removed should be larger than 0!")
 
-
-    def setItem(self, item, quantity=0):
+    def set_item(self, item, quantity=0):
         if item not in self.itemQuantities:
-            self.addItem(item, quantity)
+            self.add_item(item, quantity)
         else:
-            self.removeItem(item, self.itemQuantities[item])
-            self.addItem(item, quantity)
+            self.remove_item(item, self.itemQuantities[item])
+            self.add_item(item, quantity)
 
-    def closeTransaction(self, cashRegister, stockRegister, currencyCode):
+    def close_transaction(self, cash_register, stock_register):
         # stockRegister.update(self)
         if self.cashTotal != 0:
-            cashRegister.addTransaction(1)
-            cashRegister.addCashAndRevenue(self.cashTotal)
+            cash_register.add_transaction(1)
+            cash_register.add_cash_and_revenue(self.cashTotal)
+            cash_register.save_data("cashRegister.p")
         for item, quantity in self.itemQuantities.items():
-            stockRegister.registerSoldItem(itemCode=item.code, itemUnitPrice=item.unitPrice, itemQuantity=quantity)
-        pickle.dump(cashRegister, open("cashRegister.p", "wb"), protocol=2)
-        pickle.dump(stockRegister, open("stockRegister.p", "wb"), protocol=2)
-        return cashRegister, stockRegister
+            stock_register.register_sold_item(item_code=item.code, item_unit_price=item.unitPrice, item_quantity=quantity)
+
+        # pickle.dump(cashRegister, open("cashRegister.p", "wb"), protocol=2)
+        pickle.dump(stock_register, open("stockRegister.p", "wb"), protocol=2)
+        return cash_register, stock_register
 
 
 class CashRegister:
-    def __init__(self, cash=0, revenue=0, transactions=0, currencyCode="EUR"):
+    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR"):
         self.cash = cash
         self.revenue = revenue
         self.transactions = transactions
-        self.currencyCode = currencyCode
+        self.currencyCode = currency_code
 
     def show(self):
         print("{prefix:20} {cash:7.2f}".format(
@@ -163,47 +163,38 @@ class CashRegister:
             prefix="Transacties",
             transactions=self.transactions))
 
-    def addTransaction(self, transactions=1):
+    def add_transaction(self, transactions=1):
         self.transactions += transactions
         print(self.transactions)
 
-    def addCashAndRevenue(self, cash=0):
+    def add_cash_and_revenue(self, cash=0):
         self.cash += cash
         self.revenue += cash
         print(self.cash)
 
+    def save_data(self, cash_register_file):
+        pickle.dump(self, open("cashRegister.p", "wb"), protocol=2)
 
 
 class StockRegister:
-    def __init__(self, soldItemQuantities, soldItemRevenues, currencyCode="EUR"):
-        self.soldItemQuantities = soldItemQuantities    # Dictionary with item code and number of sold items
-        self.soldItemRevenues = soldItemRevenues    # Dictionary with item code and item revenue
-        self.currencyCode = currencyCode
+    def __init__(self, sold_item_quantities, sold_item_revenues, currency_code="EUR"):
+        self.soldItemQuantities = sold_item_quantities    # Dictionary with item code and number of sold items
+        self.soldItemRevenues = sold_item_revenues    # Dictionary with item code and item revenue
+        self.currencyCode = currency_code
 
-    def show(self, products, itemsForSale):
+    def show(self):
         for itemCode, quantity in self.soldItemQuantities.items():
-            print("[{itemCode:.^6}] {itemName:20} {itemQuantity:4} stuks ... {currencyCode} {itemRevenue:7.2f} ... Real revenue {revenue}".format(
-                itemCode=itemsForSale[itemCode].code,
-                itemName=itemsForSale[itemCode].name,
-                itemQuantity=quantity,
-                currencyCode=self.currencyCode,
-                itemRevenue=self.soldItemRevenues[itemCode],
-                revenue=itemsForSale[itemCode].revenue
-            ))
+            print(itemCode, quantity, self.soldItemRevenues[itemCode])
 
-    def update(self, soldItemQuantities, soldItemRevenues):
-        for itemCode, itemQuantity in soldItemQuantities:
-            print(itemcode, itemQuantity)
-
-    def registerSoldItem(self, itemCode, itemUnitPrice, itemQuantity):
-        if itemCode in self.soldItemQuantities:
-            self.soldItemQuantities[itemCode] += itemQuantity
+    def register_sold_item(self, item_code, item_unit_price, item_quantity):
+        if item_code in self.soldItemQuantities:
+            self.soldItemQuantities[item_code] += item_quantity
         else:
-            self.soldItemQuantities[itemCode] = itemQuantity
-        if itemCode in self.soldItemRevenues:
-            self.soldItemRevenues[itemCode] += itemQuantity * itemUnitPrice
+            self.soldItemQuantities[item_code] = item_quantity
+        if item_code in self.soldItemRevenues:
+            self.soldItemRevenues[item_code] += item_quantity * item_unit_price
         else:
-            self.soldItemRevenues[itemCode] = itemQuantity * itemUnitPrice
+            self.soldItemRevenues[item_code] = item_quantity * item_unit_price
 
 
 parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
@@ -213,66 +204,65 @@ parser.add_argument('--config-folder',
 args = parser.parse_args()
 
 
-def main(configFile, args):
+def main(config_file, args):
     try:
-        with open(os.path.join(args.config_folder, configFile), "r") as yamlFile:
+        with open(os.path.join(args.config_folder, config_file), "r") as yamlFile:
             config = yaml.load(yamlFile)
     except Exception as inst:
-        print("Failed to open or interpret config file: {}".format(inst))
-        exit()  # Exit if the config file can not be read
+        exit("Failed to open or interpret config file: {}".format(inst))  # Exit if the config file can not be read
     else:
         print("Config file '{}' interpreted.".format(yamlFile.name))
         pprint(config)
-    currencyCode = config['currencyCode']
-    itemDescriptions = {}
+    currency_code = config['currencyCode']
+    item_descriptions = {}
 
     for product in config['products']:
-        if product['code'] in itemDescriptions:
+        if product['code'] in item_descriptions:
             print("ERROR: Multiple products with code '{}' detected in config file '{}'."
-                  .format(product['code'], configFile))
+                  .format(product['code'], config_file))
             exit('DUPLICATE PRODUCT CODE')
         print("Defining product '{}'.".format(product['name']))
-        itemDescriptions[product['code']] = ItemDescription(code=product['code'],
-                                             name=product['name'],
-                                             unitPrice=product['price'],
-                                             printOrder=product['printOrder'])
+        item_descriptions[product['code']] = ItemDescription(code=product['code'],
+                                                             name=product['name'],
+                                                             unit_price=product['price'],
+                                                             print_order=product['printOrder'])
         # soldItemQuantities[product['code']] = 0
 
-    for code, item in itemDescriptions.items():
+    for code, item in item_descriptions.items():
         print("{code} -- {item}".format(code=code, item=item))
 
-    cashRegister = CashRegister(cash=config['initial']['cash'], currencyCode=currencyCode)
+    cash_register = CashRegister(cash=config['initial']['cash'], currency_code=currency_code)
     try:
-        cashRegister = pickle.load(open("cashRegister.p", "rb"))
+        cash_register = pickle.load(open("cashRegister.p", "rb"))
     except IOError as e:
         print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
-    soldItemQuantities = {}
-    soldItemRevenues = {}
-    stockRegister = StockRegister(soldItemQuantities, soldItemRevenues, config['currencyCode'])
+    sold_item_quantities = {}
+    sold_item_revenues = {}
+    stock_register = StockRegister(sold_item_quantities, sold_item_revenues, config['currencyCode'])
     try:
-        stockRegister = pickle.load(open("stockRegister.p", "rb"))
+        stock_register = pickle.load(open("stockRegister.p", "rb"))
     except IOError as e:
         print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
-    cashRegister.show()
+    cash_register.show()
 
     # print(itemDescriptions['iv'])
-    shoppingBasket = ShoppingBasket(currencyCode)
-    shoppingBasket.addItem(itemDescriptions['ik'], 10)
-    shoppingBasket.addItem(itemDescriptions['iv'], 20)
-    shoppingBasket.addItem(itemDescriptions['dk'], 30)
-    shoppingBasket.addItem(itemDescriptions['db'], 40)
-    shoppingBasket.addCash(200)
-    shoppingBasket.addCash(200)
+    shopping_basket = ShoppingBasket(currency_code)
+    shopping_basket.add_item(item_descriptions['ik'], 10)
+    shopping_basket.add_item(item_descriptions['iv'], 20)
+    shopping_basket.add_item(item_descriptions['dk'], 30)
+    shopping_basket.add_item(item_descriptions['db'], 40)
+    shopping_basket.add_cash(200)
+    shopping_basket.add_cash(200)
     # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
-    shoppingBasket.show()
-    cashRegister, stockRegister = shoppingBasket.closeTransaction(
-        cashRegister=cashRegister,
-        stockRegister=stockRegister,
-        currencyCode=currencyCode)
-    print(cashRegister, stockRegister)
-    cashRegister.show()
+    shopping_basket.show()
+    cash_register, stock_register = shopping_basket.close_transaction(
+        cash_register=cash_register,
+        stock_register=stock_register)
+    print(cash_register, stock_register)
+    cash_register.show()
+    stock_register.show()
 
     # shoppingCart.removeCash("Aha")
     # shoppingCart.setCash("Aha")
