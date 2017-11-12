@@ -136,8 +136,9 @@ class ShoppingBasket:
             cash_register.add_cash_and_revenue(self.cashTotal)
             cash_register.save_data("cashRegister.p")
         for item, quantity in self.itemQuantities.items():
-            stock_register.register_sold_item(item_code=item.code, item_unit_price=item.unitPrice, item_quantity=quantity)
-
+            stock_register.register_sold_item(item_code=item.code,
+                                              item_unit_price=item.unitPrice,
+                                              item_quantity=quantity)
         # pickle.dump(cashRegister, open("cashRegister.p", "wb"), protocol=2)
         pickle.dump(stock_register, open("stockRegister.p", "wb"), protocol=2)
         return cash_register, stock_register
@@ -195,65 +196,58 @@ class StockRegister:
             self.soldItemRevenues[item_code] = item_quantity * item_unit_price
 
 
-def main(mopos_args):
+def main(arguments):
     try:
-        with open(os.path.join(mopos_args.config_folder, mopos_args.config_file), "r") as yamlFile:
-            config = yaml.load(yamlFile)
+        with open(os.path.join(arguments.config_folder, arguments.config_file), "r") as configFile:
+            config = yaml.load(configFile)
     except Exception as inst:
         exit("Failed to open or interpret config file: {}".format(inst))  # Exit if the config file can not be read
     else:
-        print("Config file '{}' interpreted.".format(yamlFile.name))
-        pprint(config)
-    currency_code = config['currencyCode']
-    item_descriptions = {}
+        print("Config file '{}' interpreted.".format(configFile.name))
+        currency_code = config['currencyCode']
+        item_descriptions = {}
+        for product in config['products']:
+            if product['code'] in item_descriptions:
+                print("ERROR: Multiple products with code '{}' detected in config file '{}'."
+                      .format(product['code'], os.path.join(arguments.config_folder, arguments.config_file)))
+                exit('DUPLICATE PRODUCT CODE')
+            print("Defining product '{}'.".format(product['name']))
+            item_descriptions[product['code']] = ItemDescription(code=product['code'],
+                                                                 name=product['name'],
+                                                                 unit_price=product['price'],
+                                                                 print_order=product['printOrder'])
+        cash_register = CashRegister(cash=config['initial']['cash'], currency_code=currency_code)
+        try:
+            cash_register = pickle.load(open("cashRegister.p", "rb"))
+        except IOError as e:
+            print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
-    for product in config['products']:
-        if product['code'] in item_descriptions:
-            print("ERROR: Multiple products with code '{}' detected in config file '{}'."
-                  .format(product['code'], os.path.join(mopos_args.config_folder, mopos_args.config_file)))
-            exit('DUPLICATE PRODUCT CODE')
-        print("Defining product '{}'.".format(product['name']))
-        item_descriptions[product['code']] = ItemDescription(code=product['code'],
-                                                             name=product['name'],
-                                                             unit_price=product['price'],
-                                                             print_order=product['printOrder'])
-        # soldItemQuantities[product['code']] = 0
+        sold_item_quantities = {}
+        sold_item_revenues = {}
+        stock_register = StockRegister(sold_item_quantities, sold_item_revenues, config['currencyCode'])
+        try:
+            stock_register = pickle.load(open("stockRegister.p", "rb"))
+        except IOError as e:
+            print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
-    for code, item in item_descriptions.items():
-        print("{code} -- {item}".format(code=code, item=item))
+        cash_register.show()
 
-    cash_register = CashRegister(cash=config['initial']['cash'], currency_code=currency_code)
-    try:
-        cash_register = pickle.load(open("cashRegister.p", "rb"))
-    except IOError as e:
-        print("I/O error ({0}): {1}".format(e.errno, e.strerror))
-
-    sold_item_quantities = {}
-    sold_item_revenues = {}
-    stock_register = StockRegister(sold_item_quantities, sold_item_revenues, config['currencyCode'])
-    try:
-        stock_register = pickle.load(open("stockRegister.p", "rb"))
-    except IOError as e:
-        print("I/O error ({0}): {1}".format(e.errno, e.strerror))
-
-    cash_register.show()
-
-    # print(itemDescriptions['iv'])
-    shopping_basket = ShoppingBasket(currency_code)
-    shopping_basket.add_item(item_descriptions['ik'], 10)
-    shopping_basket.add_item(item_descriptions['iv'], 20)
-    shopping_basket.add_item(item_descriptions['dk'], 30)
-    shopping_basket.add_item(item_descriptions['db'], 40)
-    shopping_basket.add_cash(200)
-    shopping_basket.add_cash(200)
-    # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
-    shopping_basket.show()
-    cash_register, stock_register = shopping_basket.close_transaction(
-        cash_register=cash_register,
-        stock_register=stock_register)
-    print(cash_register, stock_register)
-    cash_register.show()
-    stock_register.show()
+        # print(itemDescriptions['iv'])
+        shopping_basket = ShoppingBasket(currency_code)
+        shopping_basket.add_item(item_descriptions['ik'], 10)
+        shopping_basket.add_item(item_descriptions['iv'], 20)
+        shopping_basket.add_item(item_descriptions['dk'], 30)
+        shopping_basket.add_item(item_descriptions['db'], 40)
+        shopping_basket.add_cash(200)
+        shopping_basket.add_cash(200)
+        # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
+        shopping_basket.show()
+        cash_register, stock_register = shopping_basket.close_transaction(
+            cash_register=cash_register,
+            stock_register=stock_register)
+        print(cash_register, stock_register)
+        cash_register.show()
+        stock_register.show()
 
     # shoppingCart.removeCash("Aha")
     # shoppingCart.setCash("Aha")
