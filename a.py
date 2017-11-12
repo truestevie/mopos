@@ -5,8 +5,6 @@ import yaml
 import argparse
 from pprint import pprint
 
-config_file = "a.yaml"
-
 
 class ItemDescription:
     def __init__(self, code, name, unit_price, print_order):
@@ -197,16 +195,9 @@ class StockRegister:
             self.soldItemRevenues[item_code] = item_quantity * item_unit_price
 
 
-parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
-parser.add_argument('--config-folder',
-                    default=".",
-                    help='Config folder, in which the config file is located')
-args = parser.parse_args()
-
-
-def main(config_file, args):
+def main(mopos_args):
     try:
-        with open(os.path.join(args.config_folder, config_file), "r") as yamlFile:
+        with open(os.path.join(mopos_args.config_folder, mopos_args.config_file), "r") as yamlFile:
             config = yaml.load(yamlFile)
     except Exception as inst:
         exit("Failed to open or interpret config file: {}".format(inst))  # Exit if the config file can not be read
@@ -219,7 +210,7 @@ def main(config_file, args):
     for product in config['products']:
         if product['code'] in item_descriptions:
             print("ERROR: Multiple products with code '{}' detected in config file '{}'."
-                  .format(product['code'], config_file))
+                  .format(product['code'], os.path.join(mopos_args.config_folder, mopos_args.config_file)))
             exit('DUPLICATE PRODUCT CODE')
         print("Defining product '{}'.".format(product['name']))
         item_descriptions[product['code']] = ItemDescription(code=product['code'],
@@ -270,5 +261,10 @@ def main(config_file, args):
     # shoppingCart.removeItem(itemDescriptions['db'], 2)
 
 
+parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
+parser.add_argument('--config-folder', default=".", help='Config folder, in which the config file is located')
+parser.add_argument('--config-file', default="a.yaml", help='Name of config file')
+args = parser.parse_args()
+
 if __name__ == "__main__":
-    main(config_file, args)
+    main(args)
