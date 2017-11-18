@@ -1,9 +1,11 @@
-import re
 import pickle
 import os
 import yaml
 import argparse
-from pprint import pprint
+import decimal
+
+D = decimal.Decimal
+cent = D('0.01')
 
 
 class ItemDescription:
@@ -20,10 +22,10 @@ class ItemDescription:
 
 class ShoppingBasket:
     def __init__(self, currency_code="EUR"):
-        self.itemQuantities = {}    # Dictionary of product objects and itemQuantities in the shopping cart
-        self.numberOfItems = 0      # Number of items in the shopping cart
-        self.cashTotal = 0.00           # Total amount (Euro's, ...) of the shopping cart
-        self.cashReceived = 0.00    # Amount (Euro's, ...) received from customer
+        self.itemQuantities = {}     # Dictionary of product objects and itemQuantities in the shopping cart
+        self.numberOfItems = 0       # Number of items in the shopping cart
+        self.cashTotal = D(0.00)     # Total amount (Euro's, ...) of the shopping cart
+        self.cashReceived = D(0.00)  # Amount (Euro's, ...) received from customer
         self.currencyCode = currency_code
 
     def show(self):
@@ -146,8 +148,8 @@ class ShoppingBasket:
 class CashRegister:
     def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR",
                  storage_location="./cashRegister.pickle"):
-        self.cash = cash
-        self.revenue = revenue
+        self.cash = D(cash)
+        self.revenue = D(revenue)
         self.transactions = transactions
         self.currencyCode = currency_code
         self.storage_location = storage_location
@@ -187,7 +189,9 @@ class StockRegister:
 
     def show(self):
         for itemCode, quantity in self.soldItemQuantities.items():
-            print(itemCode, quantity, self.soldItemRevenues[itemCode])
+            print(itemCode,
+                  quantity,
+                  self.soldItemRevenues[itemCode].quantize(cent, rounding=decimal.ROUND_DOWN))
 
     def register_sold_item(self, item_code, item_unit_price, item_quantity):
         if item_code in self.soldItemQuantities:
@@ -220,7 +224,7 @@ def main(arguments):
             print("Defining product '{}'.".format(product['name']))
             item_descriptions[product['code']] = ItemDescription(code=product['code'],
                                                                  name=product['name'],
-                                                                 unit_price=product['price'],
+                                                                 unit_price=D(product['price']),
                                                                  print_order=product['printOrder'])
         cash_register = CashRegister(cash=config['initial']['cash'],
                                      currency_code=config['currencyCode'],
