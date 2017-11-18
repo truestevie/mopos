@@ -134,7 +134,7 @@ class ShoppingBasket:
         if self.cashTotal != 0:
             cash_register.add_transaction(1)
             cash_register.add_cash_and_revenue(self.cashTotal)
-            cash_register.save_data("cashRegister.p")
+            cash_register.save_data()
         for item, quantity in self.itemQuantities.items():
             stock_register.register_sold_item(item_code=item.code,
                                               item_unit_price=item.unitPrice,
@@ -145,11 +145,12 @@ class ShoppingBasket:
 
 
 class CashRegister:
-    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR"):
+    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR", storage_location="./cashRegister.pickle"):
         self.cash = cash
         self.revenue = revenue
         self.transactions = transactions
         self.currencyCode = currency_code
+        self.storage_location = storage_location
 
     def show(self):
         print("{prefix:20} {cash:7.2f}".format(
@@ -161,6 +162,7 @@ class CashRegister:
         print("{prefix:20} {transactions:4}".format(
             prefix="Transacties",
             transactions=self.transactions))
+        print("File location: {}".format(self.storage_location))
 
     def add_transaction(self, transactions=1):
         self.transactions += transactions
@@ -171,8 +173,9 @@ class CashRegister:
         self.revenue += cash
         print(self.cash)
 
-    def save_data(self, cash_register_file):
-        pickle.dump(self, open("cashRegister.p", "wb"), protocol=2)
+    def save_data(self):
+        pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
+        print("Test")
 
 
 class StockRegister:
@@ -204,7 +207,6 @@ def main(arguments):
         exit("Failed to open or interpret config file: {}".format(inst))  # Exit if the config file can not be read
     else:
         print("Config file '{}' interpreted.".format(configFile.name))
-        currency_code = config['currencyCode']
         item_descriptions = {}
         for product in config['products']:
             if product['code'] in item_descriptions:
@@ -216,9 +218,12 @@ def main(arguments):
                                                                  name=product['name'],
                                                                  unit_price=product['price'],
                                                                  print_order=product['printOrder'])
-        cash_register = CashRegister(cash=config['initial']['cash'], currency_code=currency_code)
+        cash_register = CashRegister(cash=config['initial']['cash'],
+                                     currency_code=config['currencyCode'],
+                                     storage_location=os.path.join(arguments.config_folder,
+                                                                   config['cash_register_file']))
         try:
-            cash_register = pickle.load(open("cashRegister.p", "rb"))
+            cash_register = pickle.load(open(os.path.join(arguments.config_folder, config['cash_register_file'], "rb")))
         except IOError as e:
             print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
@@ -233,13 +238,13 @@ def main(arguments):
         cash_register.show()
 
         # print(itemDescriptions['iv'])
-        shopping_basket = ShoppingBasket(currency_code)
-        shopping_basket.add_item(item_descriptions['ik'], 10)
-        shopping_basket.add_item(item_descriptions['iv'], 20)
-        shopping_basket.add_item(item_descriptions['dk'], 30)
-        shopping_basket.add_item(item_descriptions['db'], 40)
-        shopping_basket.add_cash(200)
-        shopping_basket.add_cash(200)
+        shopping_basket = ShoppingBasket(config['currencyCode'])
+        shopping_basket.add_item(item_descriptions['ik'], 4)
+        shopping_basket.add_item(item_descriptions['iv'], 3)
+        shopping_basket.add_item(item_descriptions['dk'], 2)
+        shopping_basket.add_item(item_descriptions['db'], 1)
+        shopping_basket.add_cash(30)
+
         # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
         shopping_basket.show()
         cash_register, stock_register = shopping_basket.close_transaction(
