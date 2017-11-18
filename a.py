@@ -132,7 +132,6 @@ class ShoppingBasket:
             self.add_item(item, quantity)
 
     def close_transaction(self, cash_register, stock_register):
-        # stockRegister.update(self)
         if self.cashTotal != 0:
             cash_register.add_transaction(1)
             cash_register.add_cash_and_revenue(self.cashTotal)
@@ -173,7 +172,7 @@ class CashRegister:
     def add_cash_and_revenue(self, cash=0):
         self.cash += cash
         self.revenue += cash
-        print(self.cash)
+        print(self.cash.quantize(cent, rounding=decimal.ROUND_DOWN))
 
     def save_data(self):
         pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
@@ -233,7 +232,11 @@ def main(arguments):
         try:
             cash_register = pickle.load(open(config['cash_register_file'], "rb"))
         except IOError as e:
-            print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+            print("The cash register file '{}' does not yet exist. No data to import."
+                  .format(config['cash_register_file']))
+            # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+        else:
+            print("Data imported from the cash register file '{}'".format(config['cash_register_file']))
 
         sold_item_quantities = {}
         sold_item_revenues = {}
@@ -245,7 +248,11 @@ def main(arguments):
         try:
             stock_register = pickle.load(open(config['stock_register_file'], "rb"))
         except IOError as e:
-            print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+            print("The stock register file '{}' does not yet exist. No data to import."
+                  .format(config['stock_register_file']))
+            # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+        else:
+            print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
 
         # print(itemDescriptions['iv'])
         shopping_basket = ShoppingBasket(config['currencyCode'])
