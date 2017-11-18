@@ -66,7 +66,7 @@ class ShoppingBasket:
                 self.itemQuantities[item_object] += quantity
             else:
                 self.itemQuantities[item_object] = quantity
-            print("Item '{}' added to shopping cart. New quantity = {}."
+            print("Item '{}' added to shopping basket. New quantity = {}."
                   .format(item_object.name, self.itemQuantities[item_object]))
         else:
             print("Number of items to be added should be larger than 0!")
