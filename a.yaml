@@ -1,5 +1,5 @@
 initial:
-    cash: 1000
+    cash: 100
 
 currencyCode: EUR
 
@@ -24,3 +24,6 @@ products:
       name: Steunkaart
       price: 1
       printOrder: 5
+
+cash_register_file: cashRegister.p
+stock_register_file: stockRegister.p

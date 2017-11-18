@@ -139,13 +139,13 @@ class ShoppingBasket:
             stock_register.register_sold_item(item_code=item.code,
                                               item_unit_price=item.unitPrice,
                                               item_quantity=quantity)
-        # pickle.dump(cashRegister, open("cashRegister.p", "wb"), protocol=2)
-        pickle.dump(stock_register, open("stockRegister.p", "wb"), protocol=2)
+        stock_register.save_data()
         return cash_register, stock_register
 
 
 class CashRegister:
-    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR", storage_location="./cashRegister.pickle"):
+    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR",
+                 storage_location="./cashRegister.pickle"):
         self.cash = cash
         self.revenue = revenue
         self.transactions = transactions
@@ -175,14 +175,15 @@ class CashRegister:
 
     def save_data(self):
         pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
-        print("Test")
 
 
 class StockRegister:
-    def __init__(self, sold_item_quantities, sold_item_revenues, currency_code="EUR"):
+    def __init__(self, sold_item_quantities, sold_item_revenues, currency_code="EUR",
+                 storage_location="./stockRegister.pickle"):
         self.soldItemQuantities = sold_item_quantities    # Dictionary with item code and number of sold items
         self.soldItemRevenues = sold_item_revenues    # Dictionary with item code and item revenue
         self.currencyCode = currency_code
+        self.storage_location = storage_location
 
     def show(self):
         for itemCode, quantity in self.soldItemQuantities.items():
@@ -197,6 +198,9 @@ class StockRegister:
             self.soldItemRevenues[item_code] += item_quantity * item_unit_price
         else:
             self.soldItemRevenues[item_code] = item_quantity * item_unit_price
+
+    def save_data(self):
+        pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
 
 
 def main(arguments):
@@ -223,19 +227,21 @@ def main(arguments):
                                      storage_location=os.path.join(arguments.config_folder,
                                                                    config['cash_register_file']))
         try:
-            cash_register = pickle.load(open(os.path.join(arguments.config_folder, config['cash_register_file'], "rb")))
+            cash_register = pickle.load(open(config['cash_register_file'], "rb"))
         except IOError as e:
             print("I/O error ({0}): {1}".format(e.errno, e.strerror))
 
         sold_item_quantities = {}
         sold_item_revenues = {}
-        stock_register = StockRegister(sold_item_quantities, sold_item_revenues, config['currencyCode'])
+        stock_register = StockRegister(sold_item_quantities=sold_item_quantities,
+                                       sold_item_revenues=sold_item_revenues,
+                                       currency_code=config['currencyCode'],
+                                       storage_location=os.path.join(arguments.config_folder,
+                                                                     config['stock_register_file']))
         try:
-            stock_register = pickle.load(open("stockRegister.p", "rb"))
+            stock_register = pickle.load(open(config['stock_register_file'], "rb"))
         except IOError as e:
             print("I/O error ({0}): {1}".format(e.errno, e.strerror))
-
-        cash_register.show()
 
         # print(itemDescriptions['iv'])
         shopping_basket = ShoppingBasket(config['currencyCode'])
@@ -250,7 +256,6 @@ def main(arguments):
         cash_register, stock_register = shopping_basket.close_transaction(
             cash_register=cash_register,
             stock_register=stock_register)
-        print(cash_register, stock_register)
         cash_register.show()
         stock_register.show()
 
