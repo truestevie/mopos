@@ -12,7 +12,7 @@ class ItemDescription:
     def __init__(self, code, name, unit_price, print_order):
         self.code = code
         self.name = name
-        self.unitPrice = unit_price
+        self.unitPrice = D(unit_price)
         self.printOrder = print_order  # Future use: print sorted list
 
     def __str__(self):
@@ -150,20 +150,26 @@ class CashRegister:
         self.cash = D(cash)
         self.revenue = D(revenue)
         self.transactions = transactions
-        self.currencyCode = currency_code
+        self.currency_code = currency_code
         self.storage_location = storage_location
+
+    def show_one_line(self):
+        print("Cash: {currency_code} {cash} - Omzet: {currency_code} {revenue} - Transacties: "
+              "{transactions}".format(cash=self.cash.quantize(cent),
+                                           revenue=self.revenue.quantize(cent),
+                                           currency_code = self.currency_code,
+                                           transactions = self.transactions))
 
     def show(self):
         print("{prefix:20} {cash:7.2f}".format(
-            prefix="Cash ({currencyCode})".format(currencyCode=self.currencyCode),
+            prefix="Cash ({currencyCode})".format(currencyCode=self.currency_code),
             cash=self.cash))
         print("{prefix:20} {revenue:7.2f}".format(
-            prefix="Omzet ({currencyCode})".format(currencyCode=self.currencyCode),
+            prefix="Omzet ({currencyCode})".format(currencyCode=self.currency_code),
             revenue=self.revenue))
         print("{prefix:20} {transactions:4}".format(
             prefix="Transacties",
             transactions=self.transactions))
-        print("File location: {}".format(self.storage_location))
 
     def add_transaction(self, transactions=1):
         self.transactions += transactions
@@ -190,6 +196,7 @@ class StockRegister:
         for itemCode, quantity in self.soldItemQuantities.items():
             print(itemCode,
                   quantity,
+                  self.soldItemRevenues[itemCode],
                   self.soldItemRevenues[itemCode].quantize(cent, rounding=decimal.ROUND_DOWN))
 
     def register_sold_item(self, item_code, item_unit_price, item_quantity):
@@ -204,6 +211,10 @@ class StockRegister:
 
     def save_data(self):
         pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
+
+
+def clear_the_screen(number_of_empty_lines=100):
+    print("\n" * number_of_empty_lines)
 
 
 def main(arguments):
@@ -253,6 +264,12 @@ def main(arguments):
             # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
         else:
             print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
+
+        while True:
+            # clear_the_screen()
+            cash_register.show_one_line()
+            exit("blah")
+
 
         # print(itemDescriptions['iv'])
         shopping_basket = ShoppingBasket(config['currencyCode'])
