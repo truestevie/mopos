@@ -1,4 +1,7 @@
+encoding: "UTF-8"
+
 import pickle
+import re
 import os
 import yaml
 import argparse
@@ -141,6 +144,7 @@ class ShoppingBasket:
                                               item_unit_price=item.unitPrice,
                                               item_quantity=quantity)
         stock_register.save_data()
+        self.__init__()
         return cash_register, stock_register
 
 
@@ -198,6 +202,18 @@ class StockRegister:
                   quantity,
                   self.soldItemRevenues[itemCode],
                   self.soldItemRevenues[itemCode].quantize(cent, rounding=decimal.ROUND_DOWN))
+
+    def show_one_line(self, item_descriptions):
+        separator = ""
+        for item_code, quantity in self.soldItemQuantities.items():
+            print("[{separator}{item_code}: {quantity} x € {unit_price} = € {revenue}".format(
+                separator=separator,
+                item_code=item_code,
+                quantity=quantity,
+                unit_price=item_descriptions[item_code].unitPrice.quantize(cent, rounding=decimal.ROUND_DOWN),
+                revenue=self.soldItemRevenues[item_code].quantize(cent, rounding=decimal.ROUND_DOWN)
+            ), end="] ")
+            #separator = " - "
 
     def register_sold_item(self, item_code, item_unit_price, item_quantity):
         if item_code in self.soldItemQuantities:
@@ -264,11 +280,56 @@ def main(arguments):
             # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
         else:
             print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
+        shopping_basket = ShoppingBasket()
+
+        regex = re.compile(r'^\s*(?P<item_operation>[-+=]{0,1})(?P<item_quantity>\d{0,})(?P<item_code>[a-z]+)\s*$')
+        # More info on regex: https://docs.python.org/2/library/re.html
 
         while True:
             # clear_the_screen()
             cash_register.show_one_line()
-            exit("blah")
+            stock_register.show_one_line(item_descriptions)
+            requested_items_string = input("\n--> ")
+            requested_items_list = requested_items_string.lower().split(" ")
+            if requested_items_list == ['qq']:
+                print("QUIT")
+                break
+            if requested_items_list == ['rr']:
+                print("RESET")
+                shopping_basket.__init__(config['currencyCode'])
+            elif requested_items_list == ['nn']:
+                print("Next customer!")
+                cash_register, stock_register = shopping_basket.close_transaction(cash_register, stock_register)
+            else:
+                for operation_amount_and_item in requested_items_list:
+                    result_search = regex.search(operation_amount_and_item)
+                    if result_search is not None:
+                        product_operation = result_search.group('item_operation')
+                        product_quantity = result_search.group('item_quantity')
+                        product_code = result_search.group('item_code')
+                        print(product_operation, product_quantity, product_code)
+                        if product_code == "eu":
+                            product_code = "cash"
+                        if not product_quantity:
+                            product_quantity = 1
+                        if not product_operation:
+                            product_operation = "+"
+                        if product_code in item_descriptions:
+                            if product_operation == "+":
+                                shopping_basket.add_item(item_descriptions[product_code], int(product_quantity))
+                            elif product_operation == "-":
+                                shopping_basket.remove_item(item_descriptions[product_code], int(product_quantity))
+                            elif product_operation == "=":
+                                shopping_basket.set_item(item_descriptions[product_code], int(product_quantity))
+                        elif product_code == "cash" and product_operation == "+":
+                            shopping_basket.add_cash(int(product_quantity))
+                        elif product_code == "cash" and product_operation == "-":
+                            shopping_basket.remove_cash(int(product_quantity))
+                        elif product_code == "cash" and product_operation == "=":
+                            shopping_basket.set_cash(int(product_quantity))
+                        else:
+                            print("Product with code {} is not known.".format(product_code))
+
 
 
         # print(itemDescriptions['iv'])
