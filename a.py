@@ -252,16 +252,23 @@ def main(arguments):
                 print("ERROR: Multiple products with code '{}' detected in config file '{}'."
                       .format(product['code'], os.path.join(arguments.config_folder, arguments.config_file)))
                 exit('DUPLICATE PRODUCT CODE')
-            # print("Defining product '{}'.".format(product['name']))
-            item_descriptions[product['code']] = ItemDescription(code=product['code'],
-                                                                 name=product['name'],
-                                                                 unit_price=(product['price']),
-                                                                 print_order=product['printOrder'])
-            print(item_descriptions[product['code']])
-        cash_register = CashRegister(cash=D(config['initial']['cash']),
-                                     currency_code=config['currencyCode'],
-                                     storage_location=os.path.join(arguments.config_folder,
+            if isinstance(product['price'], str):
+                item_descriptions[product['code']] = ItemDescription(code=product['code'],
+                                                                     name=product['name'],
+                                                                     unit_price=(product['price']),
+                                                                     print_order=product['printOrder'])
+            else:
+                print("ERROR: Product price for product with code '{}' should be of type string."
+                      .format(product['code']))
+                exit('PRODUCT PRICE IS NOT A STRING')
+        if isinstance(config['initial']['cash'], str):
+            cash_register = CashRegister(cash=D(config['initial']['cash']),
+                                         currency_code=config['currencyCode'],
+                                         storage_location=os.path.join(arguments.config_folder,
                                                                    config['cash_register_file']))
+        else:
+            print("ERROR: Initial cash should be of type string.")
+            exit('INITIAL CASH IS NOT A STRING')
         try:
             cash_register = pickle.load(open(config['cash_register_file'], "rb"))
         except IOError as e:
