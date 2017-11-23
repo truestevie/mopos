@@ -26,14 +26,18 @@ class ItemDescription:
 
 
 class ShoppingBasket:
-    def __init__(self, currency_code="€"):
+    def __init__(self, item_descriptions, currency_code="€"):
         # Using the decimal module to handle the cash total and the cash received variables
         # This requires cashTotal and cashReceived to be string type
+        self.itemDescriptions = item_descriptions      # Dictionary with descriptions of the items
         self.itemQuantities = {}       # Dictionary of product objects and itemQuantities in the shopping cart
         self.numberOfItems = 0         # Number of items in the shopping cart
         self.cashTotal = D("0.00")     # Total amount (Euro's, ...) of the shopping cart
         self.cashReceived = D("0.00")  # Amount (Euro's, ...) received from customer
         self.currencyCode = currency_code
+
+    def get_number_of_items(self):
+        return(self.numberOfItems)
 
     def show(self):
         print()
@@ -67,6 +71,7 @@ class ShoppingBasket:
             print("{changeString:>44}   {currencyCode} {change:6}".format(changeString=return_string_with_check,
                                                                              change=self.cashReceived - self.cashTotal,
                                                                              currencyCode=self.currencyCode))
+        return(self.numberOfItems)
 
     def add_item(self, item_object, quantity=1):
         if quantity > 0:
@@ -82,7 +87,6 @@ class ShoppingBasket:
             print("Number of items to be added should be larger than 0!")
 
     def add_cash(self, amount):
-        print(amount)
         if D(amount) > D('0'):
             self.cashReceived += D(amount)
         else:
@@ -153,7 +157,7 @@ class ShoppingBasket:
                                               item_unit_price=item.unitPrice,
                                               item_quantity=quantity)
         stock_register.save_data()
-        self.__init__()
+        self.__init__(self.itemDescriptions)
         return cash_register, stock_register
 
 
@@ -174,15 +178,16 @@ class CashRegister:
                                            transactions = self.transactions))
 
     def show(self):
-        print("{prefix:20} {cash:7.2f}".format(
-            prefix="Cash ({currencyCode})".format(currencyCode=self.currency_code),
-            cash=self.cash))
-        print("{prefix:20} {revenue:7.2f}".format(
-            prefix="Omzet ({currencyCode})".format(currencyCode=self.currency_code),
-            revenue=self.revenue))
-        print("{prefix:20} {transactions:4}".format(
-            prefix="Transacties",
-            transactions=self.transactions))
+        print("{cash_name:<15} {currency_code}{cash:>10}\n"
+              "{revenue_name:<15} {currency_code}{revenue:>10}\n"
+              "{transactions_name:<15} {transactions:>8}".
+              format(cash_name="Cash",
+                     cash=self.cash, #.quantize(cent),
+                     revenue_name="Omzet",
+                     revenue=self.revenue, #.quantize(cent),
+                     currency_code=self.currency_code,
+                     transactions=self.transactions,
+                     transactions_name="Transacties" ))
 
     def add_transaction(self, transactions=1):
         self.transactions += transactions
@@ -206,12 +211,15 @@ class StockRegister:
         self.currencyCode = currency_code
         self.storage_location = storage_location
 
-    def show(self):
-        for itemCode, quantity in self.soldItemQuantities.items():
-            print(itemCode,
-                  quantity,
-                  self.soldItemRevenues[itemCode],
-                  self.soldItemRevenues[itemCode].quantize(cent, rounding=decimal.ROUND_DOWN))
+    def show(self, item_descriptions):
+        for item_code, quantity in self.soldItemQuantities.items():
+            print("[{item_code}] {item_description:>20}: {quantity:>3} x {currency_code} {unit_price:>6} = {currency_code} {revenue:>8}".
+                      format(item_code=item_code,
+                             item_description=item_descriptions[item_code].name,
+                             quantity=quantity,
+                             unit_price=item_descriptions[item_code].unitPrice.quantize(cent, rounding=decimal.ROUND_DOWN),
+                             currency_code=self.currencyCode,
+                             revenue=self.soldItemRevenues[item_code].quantize(cent, rounding=decimal.ROUND_DOWN)))
 
     def show_one_line(self, item_descriptions):
         separator = ""
@@ -223,7 +231,6 @@ class StockRegister:
                 unit_price=item_descriptions[item_code].unitPrice.quantize(cent, rounding=decimal.ROUND_DOWN),
                 revenue=self.soldItemRevenues[item_code].quantize(cent, rounding=decimal.ROUND_DOWN)
             ), end="] ")
-            #separator = " - "
 
     def register_sold_item(self, item_code, item_unit_price, item_quantity):
         if item_code in self.soldItemQuantities:
@@ -298,7 +305,7 @@ def main(arguments):
             # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
         else:
             print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
-        shopping_basket = ShoppingBasket(config['currencyCode'])
+        shopping_basket = ShoppingBasket(item_descriptions, config['currencyCode'])
 
         regex = re.compile(r'^\s*(?P<item_operation>[-+=]{0,1})(?P<item_quantity>\d{0,})(?P<item_code>[a-z]+)\s*$')
         # More info on regex: https://docs.python.org/2/library/re.html
@@ -307,7 +314,7 @@ def main(arguments):
             # clear_the_screen()
             # cash_register.show_one_line()
             # stock_register.show_one_line(item_descriptions)
-            requested_items_string = input("\n--> ")
+            requested_items_string = input("\n[|+|-|=] [number] [iv|ik|dk|db|eu|c] --> ")
             requested_items_list = requested_items_string.lower().split(" ")
             if requested_items_list == ['qq']:
                 print("QUIT")
@@ -325,7 +332,7 @@ def main(arguments):
                         product_operation = result_search.group('item_operation')
                         product_quantity = result_search.group('item_quantity')
                         product_code = result_search.group('item_code')
-                        print(product_operation, product_quantity, product_code)
+                        # print(product_operation, product_quantity, product_code)
                         if product_code == "eu":
                             product_code = "cash"
                         if product_code == "c":
@@ -357,20 +364,17 @@ def main(arguments):
                                 shopping_basket.set_cash(product_quantity)
                         else:
                             print("Product with code {} is not known.".format(product_code))
-            # clear_the_screen()
+            clear_the_screen()
+            if shopping_basket.get_number_of_items() == 0:
+                cash_register.show()
+                stock_register.show(item_descriptions)
             shopping_basket.show()
 
-        cash_register, stock_register = shopping_basket.close_transaction(
-            cash_register=cash_register,
-            stock_register=stock_register)
-        cash_register.show()
-        stock_register.show()
-
-    # shoppingCart.removeCash("Aha")
-    # shoppingCart.setCash("Aha")
-    # shoppingCart.show()
-    # shoppingCart.removeItem(itemDescriptions['db'], 2)
-
+        # cash_register, stock_register = shopping_basket.close_transaction(
+        #     cash_register=cash_register,
+        #     stock_register=stock_register)
+        # cash_register.show()
+        # stock_register.show()
 
 parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
 parser.add_argument('--config-folder', default=".", help='Config folder, in which the config file is located')
