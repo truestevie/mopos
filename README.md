@@ -21,3 +21,4 @@ Now updated to run on Python 3.6.3.
 
 ## Inspiration
 - https://docs.python.org/3/howto/pyporting.html
+- http://buildingskills.itmaybeahack.com/book/programming-2.6/html/p13_modules/p13_c03_decimal.html
