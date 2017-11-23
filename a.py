@@ -40,7 +40,7 @@ class ShoppingBasket:
         print()
         for item, quantity in self.itemQuantities.items():
             if quantity != 0:
-                print("{itemName:<30} {itemQuantity:4} x {currencyCode} {unitPrice:3.2f} = "
+                print("{itemName:<30} {itemQuantity:4} x {currencyCode} {unitPrice:4} = "
                       "{currencyCode} {totalItemPrice:>6.2f}".format(itemName=item.name,
                                                                      itemQuantity=quantity,
                                                                      unitPrice=item.unitPrice,
@@ -48,20 +48,23 @@ class ShoppingBasket:
                                                                      currencyCode=self.currencyCode))
         if self.cashTotal != 0:
             print()
-            print("Totaal {numberOfItems:>28} item(s)      {currencyCode} {amount:6.2f}"
+            print("Totaal {numberOfItems:>29} item(s)   {currencyCode} {amount:6.2f}"
                   .format(numberOfItems=self.numberOfItems, amount=self.cashTotal, currencyCode=self.currencyCode))
         if self.cashReceived != 0:
             if self.cashReceived >= self.cashTotal:
                 cash_string_with_check = "Ontvangen"
+                return_string_with_check = "Terug"
             else:
                 cash_string_with_check = "Ontvangen (ONTOEREIKEND)"
+                return_string_with_check = "Nog extra te ontvangen"
             print()
             print()
-            print("{cashString:>46}   {currencyCode} {cash:6.2f}".format(cashString=cash_string_with_check,
-                                                                         cash=self.cashReceived,
+            print("{cashString:>44}   {currencyCode} {cash:6}".format(cashString=cash_string_with_check,
+                                                                         cash=self.cashReceived.quantize(cent),
                                                                          currencyCode=self.currencyCode))
             print()
-            print("{changeString:>46}   {currencyCode} {change:6.2f}".format(changeString="Terug",
+
+            print("{changeString:>44}   {currencyCode} {change:6}".format(changeString=return_string_with_check,
                                                                              change=self.cashReceived - self.cashTotal,
                                                                              currencyCode=self.currencyCode))
 
@@ -73,12 +76,13 @@ class ShoppingBasket:
                 self.itemQuantities[item_object] += quantity
             else:
                 self.itemQuantities[item_object] = quantity
-            print("Item '{}' added to shopping basket. New quantity = {}."
-                  .format(item_object.name, self.itemQuantities[item_object]))
+            # print("Item '{}' added to shopping basket. New quantity = {}."
+            #      .format(item_object.name, self.itemQuantities[item_object]))
         else:
             print("Number of items to be added should be larger than 0!")
 
     def add_cash(self, amount):
+        print(amount)
         if D(amount) > D('0'):
             self.cashReceived += D(amount)
         else:
@@ -98,7 +102,8 @@ class ShoppingBasket:
 
     def set_cash(self, amount):
         if D(amount) > D('0'):
-            self.cashReceived = D(amount)
+            self.cashReceived = D(str(amount))
+            print(self.cashReceived)
         else:
             print("Amount should be larger than 0!")
 
@@ -293,15 +298,15 @@ def main(arguments):
             # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
         else:
             print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
-        shopping_basket = ShoppingBasket()
+        shopping_basket = ShoppingBasket(config['currencyCode'])
 
         regex = re.compile(r'^\s*(?P<item_operation>[-+=]{0,1})(?P<item_quantity>\d{0,})(?P<item_code>[a-z]+)\s*$')
         # More info on regex: https://docs.python.org/2/library/re.html
 
         while True:
             # clear_the_screen()
-            cash_register.show_one_line()
-            stock_register.show_one_line(item_descriptions)
+            # cash_register.show_one_line()
+            # stock_register.show_one_line(item_descriptions)
             requested_items_string = input("\n--> ")
             requested_items_list = requested_items_string.lower().split(" ")
             if requested_items_list == ['qq']:
@@ -323,6 +328,8 @@ def main(arguments):
                         print(product_operation, product_quantity, product_code)
                         if product_code == "eu":
                             product_code = "cash"
+                        if product_code == "c":
+                            product_code = "cash_cent"
                         if not product_quantity:
                             product_quantity = 1
                         if not product_operation:
@@ -334,27 +341,25 @@ def main(arguments):
                                 shopping_basket.remove_item(item_descriptions[product_code], int(product_quantity))
                             elif product_operation == "=":
                                 shopping_basket.set_item(item_descriptions[product_code], int(product_quantity))
-                        elif product_code == "cash" and product_operation == "+":
-                            shopping_basket.add_cash(str(product_quantity))
-                        elif product_code == "cash" and product_operation == "-":
-                            shopping_basket.remove_cash(str(product_quantity))
-                        elif product_code == "cash" and product_operation == "=":
-                            shopping_basket.set_cash(str(product_quantity))
+                        elif product_code == "cash_cent":
+                            if product_operation == "+":
+                                shopping_basket.add_cash(D(product_quantity)/100)
+                            elif product_operation == "-":
+                                shopping_basket.remove_cash(D(product_quantity)/100)
+                            elif product_operation == "=":
+                                shopping_basket.set_cash(D(product_quantity)/100)
+                        elif product_code == "cash":
+                            if product_operation == "+":
+                                shopping_basket.add_cash(product_quantity)
+                            elif product_operation == "-":
+                                shopping_basket.remove_cash(product_quantity)
+                            elif product_operation == "=":
+                                shopping_basket.set_cash(product_quantity)
                         else:
                             print("Product with code {} is not known.".format(product_code))
+            # clear_the_screen()
+            shopping_basket.show()
 
-
-
-        # print(itemDescriptions['iv'])
-        shopping_basket = ShoppingBasket(config['currencyCode'])
-        shopping_basket.add_item(item_descriptions['ik'], 4)
-        shopping_basket.add_item(item_descriptions['iv'], 3)
-        shopping_basket.add_item(item_descriptions['dk'], 2)
-        shopping_basket.add_item(item_descriptions['db'], 1)
-        shopping_basket.add_cash(30)
-
-        # shoppingBasket.removeItem(itemDescriptions['ik'], 1)
-        shopping_basket.show()
         cash_register, stock_register = shopping_basket.close_transaction(
             cash_register=cash_register,
             stock_register=stock_register)
