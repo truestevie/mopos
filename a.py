@@ -1,4 +1,4 @@
-encoding: "UTF-8"
+# -*- coding: utf-8 -*-
 
 import pickle
 import re
@@ -13,6 +13,8 @@ cent = D('0.01')
 
 class ItemDescription:
     def __init__(self, code, name, unit_price, print_order):
+        # Using the decimal module to handle the unit price
+        # This requires the unit_price to be a string (not a float)
         self.code = code
         self.name = name
         self.unitPrice = D(unit_price)
@@ -24,11 +26,13 @@ class ItemDescription:
 
 
 class ShoppingBasket:
-    def __init__(self, currency_code="EUR"):
-        self.itemQuantities = {}     # Dictionary of product objects and itemQuantities in the shopping cart
-        self.numberOfItems = 0       # Number of items in the shopping cart
-        self.cashTotal = D(0.00)     # Total amount (Euro's, ...) of the shopping cart
-        self.cashReceived = D(0.00)  # Amount (Euro's, ...) received from customer
+    def __init__(self, currency_code="€"):
+        # Using the decimal module to handle the cash total and the cash received variables
+        # This requires cashTotal and cashReceived to be string type
+        self.itemQuantities = {}       # Dictionary of product objects and itemQuantities in the shopping cart
+        self.numberOfItems = 0         # Number of items in the shopping cart
+        self.cashTotal = D("0.00")     # Total amount (Euro's, ...) of the shopping cart
+        self.cashReceived = D("0.00")  # Amount (Euro's, ...) received from customer
         self.currencyCode = currency_code
 
     def show(self):
@@ -75,17 +79,17 @@ class ShoppingBasket:
             print("Number of items to be added should be larger than 0!")
 
     def add_cash(self, amount):
-        if amount > 0:
-            self.cashReceived += amount
+        if D(amount) > D('0'):
+            self.cashReceived += D(amount)
         else:
             print("Amount should be larger than 0!")
 
     def remove_cash(self, amount):
-        if amount > 0:
-            if amount < self.cashReceived:
-                self.cashReceived -= amount
+        if D(amount) > D('0'):
+            if D(amount) <= self.cashReceived:
+                self.cashReceived -= D(amount)
             else:
-                print("Unable to remove {currencyCode} {amount:.2f} from basket, it has only {currencyCode}"
+                print("Unable to remove {currencyCode} {amount} from basket, it has only {currencyCode}"
                       " {cashReceived:.2f} available.".format(currencyCode=self.currencyCode,
                                                               amount=amount,
                                                               cashReceived=self.cashReceived))
@@ -93,8 +97,8 @@ class ShoppingBasket:
             print("Amount should be larger than 0!")
 
     def set_cash(self, amount):
-        if amount > 0:
-            self.cashReceived = amount
+        if D(amount) > D('0'):
+            self.cashReceived = D(amount)
         else:
             print("Amount should be larger than 0!")
 
@@ -149,7 +153,7 @@ class ShoppingBasket:
 
 
 class CashRegister:
-    def __init__(self, cash=0, revenue=0, transactions=0, currency_code="EUR",
+    def __init__(self, cash='0.00', revenue='0.00', transactions=0, currency_code="EUR",
                  storage_location="./cashRegister.pickle"):
         self.cash = D(cash)
         self.revenue = D(revenue)
@@ -159,8 +163,8 @@ class CashRegister:
 
     def show_one_line(self):
         print("Cash: {currency_code} {cash} - Omzet: {currency_code} {revenue} - Transacties: "
-              "{transactions}".format(cash=self.cash.quantize(cent),
-                                           revenue=self.revenue.quantize(cent),
+              "{transactions}".format(cash=self.cash, #.quantize(cent),
+                                           revenue=self.revenue, #.quantize(cent),
                                            currency_code = self.currency_code,
                                            transactions = self.transactions))
 
@@ -179,17 +183,18 @@ class CashRegister:
         self.transactions += transactions
         print(self.transactions)
 
-    def add_cash_and_revenue(self, cash=0):
-        self.cash += cash
-        self.revenue += cash
-        print(self.cash.quantize(cent, rounding=decimal.ROUND_DOWN))
+    def add_cash_and_revenue(self, cash='0.00'):
+        self.cash += D(cash)
+        self.revenue += D(cash)
+        print(self.cash)
+        print(self.revenue)
 
     def save_data(self):
         pickle.dump(self, open(self.storage_location, "wb"), protocol=2)
 
 
 class StockRegister:
-    def __init__(self, sold_item_quantities, sold_item_revenues, currency_code="EUR",
+    def __init__(self, sold_item_quantities, sold_item_revenues, currency_code="€",
                  storage_location="./stockRegister.pickle"):
         self.soldItemQuantities = sold_item_quantities    # Dictionary with item code and number of sold items
         self.soldItemRevenues = sold_item_revenues    # Dictionary with item code and item revenue
@@ -247,12 +252,13 @@ def main(arguments):
                 print("ERROR: Multiple products with code '{}' detected in config file '{}'."
                       .format(product['code'], os.path.join(arguments.config_folder, arguments.config_file)))
                 exit('DUPLICATE PRODUCT CODE')
-            print("Defining product '{}'.".format(product['name']))
+            # print("Defining product '{}'.".format(product['name']))
             item_descriptions[product['code']] = ItemDescription(code=product['code'],
                                                                  name=product['name'],
-                                                                 unit_price=D(product['price']),
+                                                                 unit_price=(product['price']),
                                                                  print_order=product['printOrder'])
-        cash_register = CashRegister(cash=config['initial']['cash'],
+            print(item_descriptions[product['code']])
+        cash_register = CashRegister(cash=D(config['initial']['cash']),
                                      currency_code=config['currencyCode'],
                                      storage_location=os.path.join(arguments.config_folder,
                                                                    config['cash_register_file']))
@@ -322,11 +328,11 @@ def main(arguments):
                             elif product_operation == "=":
                                 shopping_basket.set_item(item_descriptions[product_code], int(product_quantity))
                         elif product_code == "cash" and product_operation == "+":
-                            shopping_basket.add_cash(int(product_quantity))
+                            shopping_basket.add_cash(str(product_quantity))
                         elif product_code == "cash" and product_operation == "-":
-                            shopping_basket.remove_cash(int(product_quantity))
+                            shopping_basket.remove_cash(str(product_quantity))
                         elif product_code == "cash" and product_operation == "=":
-                            shopping_basket.set_cash(int(product_quantity))
+                            shopping_basket.set_cash(str(product_quantity))
                         else:
                             print("Product with code {} is not known.".format(product_code))
 

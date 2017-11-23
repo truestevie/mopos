@@ -1,25 +1,25 @@
 initial:
-    cash: 1676.89
+    cash: '1676.89'
 
-currencyCode: €
+currencyCode: '€'
 
 products:
-    - code: iv
-      name: Inkom volwassene
-      price: 2.00
+    - code: 'iv'
+      name: 'Inkom volwassene'
+      price: '2.00'
       printOrder: 1
-    - code: ik
-      name: Inkom kind
-      price: 1.00
+    - code: 'ik'
+      name: 'Inkom kind'
+      price: '1.00'
       printOrder: 2
-    - code: dk
-      name: Drankkaart
-      price: 9.00
+    - code: 'dk'
+      name: 'Drankkaart'
+      price: '9.00'
       printOrder: 3
-    - code: db
-      name: Drankbon
-      price: 0.90
+    - code: 'db'
+      name: 'Drankbon'
+      price: '0.90'
       printOrder: 4
 
-cash_register_file: cashRegister.p
-stock_register_file: stockRegister.p
+cash_register_file: 'cashRegister.p'
+stock_register_file: 'stockRegister.p'
