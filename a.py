@@ -37,41 +37,41 @@ class ShoppingBasket:
         self.currencyCode = currency_code
 
     def get_number_of_items(self):
-        return(self.numberOfItems)
+        return self.numberOfItems
 
     def show(self):
-        print()
-        print()
         for item, quantity in self.itemQuantities.items():
             if quantity != 0:
-                print("{itemName:<30} {itemQuantity:4} x {currencyCode} {unitPrice:4} = "
-                      "{currencyCode} {totalItemPrice:>6.2f}".format(itemName=item.name,
-                                                                     itemQuantity=quantity,
-                                                                     unitPrice=item.unitPrice,
-                                                                     totalItemPrice=quantity * item.unitPrice,
-                                                                     currencyCode=self.currencyCode))
+                print("{itemName:<30} {itemQuantity:4} x {unitPrice:4} = {totalItemPrice:>7}"
+                      .format(itemName=item.name,
+                              itemQuantity=quantity,
+                              unitPrice=self.currencyCode+str(item.unitPrice),
+                              totalItemPrice=self.currencyCode+str(quantity*item.unitPrice),
+                              currencyCode=self.currencyCode))
         if self.cashTotal != 0:
             print()
-            print("Totaal {numberOfItems:>29} item(s)   {currencyCode} {amount:6.2f}"
-                  .format(numberOfItems=self.numberOfItems, amount=self.cashTotal, currencyCode=self.currencyCode))
+            print("Totaal {numberOfItems:>28} item(s)   {amount:>7}"
+                  .format(numberOfItems=self.numberOfItems,
+                          amount=self.currencyCode+str(self.cashTotal),
+                          currencyCode=self.currencyCode))
         if self.cashReceived != 0:
             if self.cashReceived >= self.cashTotal:
-                cash_string_with_check = "Ontvangen"
-                return_string_with_check = "Terug"
+                cash_string_with_check = "Ontvangen:"
+                return_string_with_check = "Terug:"
             else:
-                cash_string_with_check = "Ontvangen (ONTOEREIKEND)"
-                return_string_with_check = "Nog extra te ontvangen"
+                cash_string_with_check = "Ontvangen (ONTOEREIKEND):"
+                return_string_with_check = "Nog extra te ontvangen:"
             print()
-            print()
-            print("{cashString:>44}   {currencyCode} {cash:6}".format(cashString=cash_string_with_check,
-                                                                         cash=self.cashReceived.quantize(cent),
-                                                                         currencyCode=self.currencyCode))
+            print("{cashString:>45}{cash:>8}".
+                  format(cashString=cash_string_with_check,
+                         cash=self.currencyCode+str(self.cashReceived.quantize(cent))))
             print()
 
-            print("{changeString:>44}   {currencyCode} {change:6}".format(changeString=return_string_with_check,
-                                                                             change=self.cashReceived - self.cashTotal,
-                                                                             currencyCode=self.currencyCode))
-        return(self.numberOfItems)
+            print("{changeString:>45}{change:>8}"
+                  .format(changeString=return_string_with_check,
+                          change=self.currencyCode+str(self.cashReceived - self.cashTotal),
+                          currencyCode=self.currencyCode))
+        return self.numberOfItems
 
     def add_item(self, item_object, quantity=1):
         if quantity > 0:
@@ -105,7 +105,7 @@ class ShoppingBasket:
             print("Amount should be larger than 0!")
 
     def set_cash(self, amount):
-        if D(amount) > D('0'):
+        if D(amount) >= D('0'):
             self.cashReceived = D(str(amount))
             print(self.cashReceived)
         else:
@@ -172,22 +172,22 @@ class CashRegister:
 
     def show_one_line(self):
         print("Cash: {currency_code} {cash} - Omzet: {currency_code} {revenue} - Transacties: "
-              "{transactions}".format(cash=self.cash, #.quantize(cent),
-                                           revenue=self.revenue, #.quantize(cent),
-                                           currency_code = self.currency_code,
-                                           transactions = self.transactions))
+              "{transactions}".format(cash=self.cash,
+                                      revenue=self.revenue,
+                                      currency_code=self.currency_code,
+                                      transactions=self.transactions))
 
     def show(self):
-        print("{cash_name:<15} {currency_code}{cash:>10}\n"
-              "{revenue_name:<15} {currency_code}{revenue:>10}\n"
-              "{transactions_name:<15} {transactions:>8}".
+        print("{cash_name:<38} {cash:>10}\n"
+              "{revenue_name:<38} {revenue:>10}\n"
+              "{transactions_name:<37} {transactions:>8}".
               format(cash_name="Cash",
-                     cash=self.cash, #.quantize(cent),
+                     cash=self.currency_code+str(self.cash),
                      revenue_name="Omzet",
-                     revenue=self.revenue, #.quantize(cent),
+                     revenue=self.currency_code+str(self.revenue),
                      currency_code=self.currency_code,
                      transactions=self.transactions,
-                     transactions_name="Transacties" ))
+                     transactions_name="Transacties"))
 
     def add_transaction(self, transactions=1):
         self.transactions += transactions
@@ -213,13 +213,15 @@ class StockRegister:
 
     def show(self, item_descriptions):
         for item_code, quantity in self.soldItemQuantities.items():
-            print("[{item_code}] {item_description:>20}: {quantity:>3} x {currency_code} {unit_price:>6} = {currency_code} {revenue:>8}".
-                      format(item_code=item_code,
-                             item_description=item_descriptions[item_code].name,
-                             quantity=quantity,
-                             unit_price=item_descriptions[item_code].unitPrice.quantize(cent, rounding=decimal.ROUND_DOWN),
-                             currency_code=self.currencyCode,
-                             revenue=self.soldItemRevenues[item_code].quantize(cent, rounding=decimal.ROUND_DOWN)))
+            print("[{item_code}] {item_description:<20} {quantity:>3} x {unit_price:>6} = {revenue:>8}".
+                  format(item_code=item_code,
+                         item_description=item_descriptions[item_code].name,
+                         quantity=quantity,
+                         unit_price=self.currencyCode+str(item_descriptions[item_code].unitPrice
+                                                          .quantize(cent, rounding=decimal.ROUND_DOWN)),
+                         currency_code=self.currencyCode,
+                         revenue=self.currencyCode+str(self.soldItemRevenues[item_code]
+                                                       .quantize(cent, rounding=decimal.ROUND_DOWN))))
 
     def show_one_line(self, item_descriptions):
         separator = ""
@@ -230,7 +232,7 @@ class StockRegister:
                 quantity=quantity,
                 unit_price=item_descriptions[item_code].unitPrice.quantize(cent, rounding=decimal.ROUND_DOWN),
                 revenue=self.soldItemRevenues[item_code].quantize(cent, rounding=decimal.ROUND_DOWN)
-            ), end="] ")
+            ))
 
     def register_sold_item(self, item_code, item_unit_price, item_quantity):
         if item_code in self.soldItemQuantities:
@@ -277,16 +279,15 @@ def main(arguments):
             cash_register = CashRegister(cash=D(config['initial']['cash']),
                                          currency_code=config['currencyCode'],
                                          storage_location=os.path.join(arguments.config_folder,
-                                                                   config['cash_register_file']))
+                                                                       config['cash_register_file']))
         else:
             print("ERROR: Initial cash should be of type string.")
             exit('INITIAL CASH IS NOT A STRING')
         try:
             cash_register = pickle.load(open(config['cash_register_file'], "rb"))
         except IOError as e:
-            print("The cash register file '{}' does not yet exist. No data to import."
-                  .format(config['cash_register_file']))
-            # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+            print("The cash register file '{}' does not yet exist. No data to import. {} {}"
+                  .format(config['cash_register_file'], e.errno, e.strerror))
         else:
             print("Data imported from the cash register file '{}'".format(config['cash_register_file']))
 
@@ -300,9 +301,8 @@ def main(arguments):
         try:
             stock_register = pickle.load(open(config['stock_register_file'], "rb"))
         except IOError as e:
-            print("The stock register file '{}' does not yet exist. No data to import."
-                  .format(config['stock_register_file']))
-            # print("I/O error ({0}): {1}".format(e.errno, e.strerror))
+            print("The stock register file '{}' does not yet exist. No data to import. {} {}"
+                  .format(config['stock_register_file'], e.errno, e.strerror))
         else:
             print("Data imported from the stock register file '{}'".format(config['stock_register_file']))
         shopping_basket = ShoppingBasket(item_descriptions, config['currencyCode'])
@@ -314,12 +314,13 @@ def main(arguments):
             # clear_the_screen()
             # cash_register.show_one_line()
             # stock_register.show_one_line(item_descriptions)
-            requested_items_string = input("\n[|+|-|=] [number] [iv|ik|dk|db|eu|c] --> ")
+            error_message = ""
+            requested_items_string = input("\n[|+|-|=] [nummer] [iv|ik|dk|db|eu|c] --> ")
             requested_items_list = requested_items_string.lower().split(" ")
             if requested_items_list == ['qq']:
                 print("QUIT")
                 break
-            if requested_items_list == ['rr']:
+            elif requested_items_list == ['rr']:
                 print("RESET")
                 shopping_basket.__init__(config['currencyCode'])
             elif requested_items_list == ['nn']:
@@ -363,18 +364,14 @@ def main(arguments):
                             elif product_operation == "=":
                                 shopping_basket.set_cash(product_quantity)
                         else:
-                            print("Product with code {} is not known.".format(product_code))
+                            error_message += "FOUT: Product met code '{}' is niet gekend.\n".format(product_code)
             clear_the_screen()
+            print(error_message)
             if shopping_basket.get_number_of_items() == 0:
                 cash_register.show()
                 stock_register.show(item_descriptions)
             shopping_basket.show()
 
-        # cash_register, stock_register = shopping_basket.close_transaction(
-        #     cash_register=cash_register,
-        #     stock_register=stock_register)
-        # cash_register.show()
-        # stock_register.show()
 
 parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
 parser.add_argument('--config-folder', default=".", help='Config folder, in which the config file is located')
