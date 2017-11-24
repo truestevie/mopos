@@ -315,7 +315,7 @@ def main(arguments):
             # cash_register.show_one_line()
             # stock_register.show_one_line(item_descriptions)
             error_message = ""
-            requested_items_string = input("\n[|+|-|=] [nummer] [iv|ik|dk|mk|db|eu|c] --> ")
+            requested_items_string = input("\n[|+|-|=] [nummer] [iv|ik|dk|db|mk|eu|c] --> ")
             requested_items_list = requested_items_string.lower().split(" ")
             if requested_items_list == ['qq']:
                 print("QUIT")
