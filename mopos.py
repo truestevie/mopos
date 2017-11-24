@@ -375,7 +375,7 @@ def main(arguments):
 
 parser = argparse.ArgumentParser(description='MyOwnPointOfSales: keeping track of cash and goods.')
 parser.add_argument('--config-folder', default=".", help='Config folder, in which the config file is located')
-parser.add_argument('--config-file', default="a.yaml", help='Name of config file')
+parser.add_argument('--config-file', default="mopos.yaml", help='Name of config file')
 args = parser.parse_args()
 
 if __name__ == "__main__":
