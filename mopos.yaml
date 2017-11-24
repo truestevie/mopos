@@ -20,6 +20,10 @@ products:
       name: 'Drankbon'
       price: '0.90'
       printOrder: 4
+    - code: 'mk'
+      name: 'Medewerkerskaart'
+      price: '0.00'
+      printOrder: 5
 
 cash_register_file: 'cashRegister.p'
 stock_register_file: 'stockRegister.p'
